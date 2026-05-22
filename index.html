@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Insights - Vedic Astrology</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        :root {
+            --bg-deep: #030712;
+            --bg-midnight: #0b1120;
+            --gold-primary: #d4af37;
+            --gold-light: #f3e5ab;
+            --gold-dark: #aa8c2c;
+            --gold-glow: rgba(212, 175, 55, 0.2);
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --panel-bg: rgba(15, 23, 42, 0.5);
+            --border-glass: rgba(212, 175, 55, 0.15);
+            
+            --transition-smooth: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(212, 175, 55, 0.03), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.04), transparent 25%);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Starry background effect */
+        .stars {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: -1;
+            pointer-events: none;
+            background: 
+                url('data:image/svg+xml;utf8,<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><circle cx="40" cy="40" r="0.5" fill="%23ffffff" opacity="0.4"/><circle cx="120" cy="80" r="1" fill="%23d4af37" opacity="0.5"/><circle cx="80" cy="150" r="0.5" fill="%23ffffff" opacity="0.3"/><circle cx="160" cy="180" r="1.5" fill="%23d4af37" opacity="0.2"/></svg>') repeat;
+            animation: moveStars 150s linear infinite;
+        }
+        @keyframes moveStars {
+            from { background-position: 0 0; }
+            to { background-position: -1000px 500px; }
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Cormorant Garamond', serif;
+            color: var(--gold-primary);
+            font-weight: 600;
+        }
+
+        /* Header Settings */
+        .settings-bar {
+            background: rgba(3, 7, 18, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-glass);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .api-input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .api-input-group label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="password"], input[type="text"], input[type="date"], input[type="time"] {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-glass);
+            color: var(--text-main);
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: var(--transition-smooth);
+        }
+
+        input:focus {
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 10px var(--gold-glow);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        /* Container & Phases */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .phase {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUp 0.6s ease forwards;
+        }
+
+        .phase.active {
+            display: block;
+        }
+
+        @keyframes fadeUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Glass Panel */
+        .glass-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Phase 1: Form */
+        .title-section {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .title-section h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .title-section p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            font-style: italic;
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            color: var(--gold-light);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            font-size: 1rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            accent-color: var(--gold-primary);
+        }
+
+        .btn {
+            background: transparent;
+            border: 1px solid var(--gold-primary);
+            color: var(--gold-primary);
+            padding: 0.8rem 2rem;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            width: 100%;
+            margin-top: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            background: var(--gold-primary);
+            color: var(--bg-deep);
+            box-shadow: 0 0 20px var(--gold-glow);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Loading Spinner */
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            color: var(--gold-primary);
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2rem;
+            font-style: italic;
+        }
+        .loader.active {
+            display: block;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        /* Phase 2: Reading */
+        .reading-container {
+            line-height: 1.8;
+            color: var(--text-main);
+        }
+
+        .reading-container h2 {
+            font-size: 2.2rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-glass);
+            padding-bottom: 0.5rem;
+        }
+
+        .reading-container h3 {
+            font-size: 1.6rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.8rem;
+            color: var(--gold-light);
+        }
+
+        .reading-container p, .reading-container ul {
+            margin-bottom: 1.2rem;
+        }
+
+        .reading-container li {
+            margin-left: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .reading-container strong {
+            color: var(--gold-light);
+            font-weight: 500;
+        }
+
+        /* Phase 3: Chat */
+        .chat-section {
+            margin-top: 3rem;
+            border-top: 1px dashed var(--border-glass);
+            padding-top: 2rem;
+        }
+
+        .chat-history {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 1rem;
+        }
+
+        /* Custom scrollbar */
+        .chat-history::-webkit-scrollbar { width: 6px; }
+        .chat-history::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        .chat-history::-webkit-scrollbar-thumb { background: var(--border-glass); border-radius: 3px; }
+
+        .chat-msg {
+            padding: 1rem 1.2rem;
+            border-radius: 12px;
+            max-width: 85%;
+            line-height: 1.6;
+        }
+
+        .chat-msg.user {
+            background: rgba(212, 175, 55, 0.08);
+            border: 1px solid var(--border-glass);
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .chat-msg.ai {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        .chat-msg.ai h3 { font-size: 1.3rem; margin-top: 1rem; margin-bottom: 0.5rem; }
+        .chat-msg.ai p { margin-bottom: 0.8rem; }
+        .chat-msg.ai p:last-child { margin-bottom: 0; }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .chat-input-wrapper input {
+            flex: 1;
+            padding: 1rem 1.2rem;
+            border-radius: 24px;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .chat-input-wrapper button {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--gold-primary);
+            color: var(--bg-deep);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition-smooth);
+        }
+
+        .chat-input-wrapper button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--gold-glow);
+        }
+
+        .chat-input-wrapper button:disabled {
+            background: var(--border-glass);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* SVG Icons */
+        .icon-send {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .glass-panel { padding: 1.5rem; }
+            .title-section h1 { font-size: 2.2rem; }
+            .chat-msg { max-width: 95%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+
+    <header class="settings-bar">
+        <div class="api-input-group">
+            <label for="astroApiKey">FreeAstro API</label>
+            <input type="password" id="astroApiKey" placeholder="Key (optional)" autocomplete="off" value="305706b470fdcd68c6d6b09191997afa3b2b8a54115bb12ccabdc17fd962acc1" style="width: 120px; margin-right: 1.5rem;">
+            <label for="apiProvider">Provider</label>
+            <select id="apiProvider" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass); color: var(--text-main); padding: 0.5rem 0.75rem; border-radius: 6px; font-family: 'Inter', sans-serif; outline: none; margin-right: 1rem;">
+                <option value="gemini" style="background: #0d0d0d">Gemini (1.5 Flash)</option>
+                <option value="groq" style="background: #0d0d0d">Groq (Llama 3 70B)</option>
+                <option value="zai" style="background: #0d0d0d">Z.ai (GLM-4.5-Flash)</option>
+            </select>
+            <label for="apiKey">API Key</label>
+            <input type="password" id="apiKey" placeholder="Key..." autocomplete="off" value="d7a99c6e21f34f939b30b0d8a9a17498.j693ukQ6AG8yPEFY">
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Phase 1: Input Form -->
+        <div id="phase1" class="phase active glass-panel">
+            <div class="title-section">
+                <h1>Cosmic Insights</h1>
+                <p>Discover your path through Vedic Astrology</p>
+            </div>
+            
+            <form id="birthForm">
+                <div class="form-group">
+                    <label for="dob">Date of Birth</label>
+                    <input type="date" id="dob" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="tob">Time of Birth</label>
+                    <input type="time" id="tob">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="unknownTime">
+                        <label for="unknownTime" style="color: var(--text-muted); font-weight: 400; font-size: 0.85rem;">I don't know my exact time of birth</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="pob">Place of Birth (City, State, Country)</label>
+                    <input type="text" id="pob" placeholder="e.g., New Delhi, India" required>
+                </div>
+
+                <button type="submit" class="btn" id="generateBtn">Reveal My Chart</button>
+            </form>
+        </div>
+
+        <!-- Loader -->
+        <div id="loader" class="loader">
+            Consulting the stars...<br>
+            <span style="font-size: 0.9rem; font-family: 'Inter', sans-serif; color: var(--text-muted); display: block; margin-top: 0.5rem;">This may take a moment</span>
+        </div>
+
+        <!-- Phase 2 & 3: Results and Chat -->
+        <div id="phase2" class="phase">
+            <div class="glass-panel">
+                <div id="astroRawData" class="reading-container" style="display: none; margin-bottom: 2rem; border-bottom: 1px dashed var(--border-glass); padding-bottom: 2rem;">
+                    <!-- FreeAstro API exact data injected here -->
+                </div>
+
+                <div id="aiLoader" class="loader" style="padding: 2rem 0; margin-top: 1rem;">
+                    Consulting the AI...<br>
+                    <span style="font-size: 0.9rem; font-family: 'Inter', sans-serif; color: var(--text-muted); display: block; margin-top: 0.5rem;">Generating your personalized reading</span>
+                </div>
+
+                <div id="chartReading" class="reading-container" style="display: none;">
+                    <!-- Markdown injected here -->
+                </div>
+
+                <!-- Phase 3: Chat -->
+                <div id="chatContainer" class="chat-section" style="display: none;">
+                    <h3 style="font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; margin-bottom: 1rem;">Ask the Astrologer</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Inquire about specific areas like career, relationships, dashas, or upcoming transits.</p>
+                    
+                    <div id="chatHistory" class="chat-history">
+                        <!-- Chat messages injected here -->
+                    </div>
+
+                    <form id="chatForm" class="chat-input-wrapper">
+                        <input type="text" id="chatInput" placeholder="Ask about your chart..." required autocomplete="off">
+                        <button type="submit" id="chatBtn">
+                            <svg class="icon-send" viewBox="0 0 24 24">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let conversationHistory = [];
+        let birthDetailsContext = "";
+
+        // DOM Elements
+        const phase1 = document.getElementById('phase1');
+        const phase2 = document.getElementById('phase2');
+        const loader = document.getElementById('loader');
+        
+        const birthForm = document.getElementById('birthForm');
+        const generateBtn = document.getElementById('generateBtn');
+        const unknownTime = document.getElementById('unknownTime');
+        const tobInput = document.getElementById('tob');
+        
+        const chartReading = document.getElementById('chartReading');
+        const chatForm = document.getElementById('chatForm');
+        const chatInput = document.getElementById('chatInput');
+        const chatBtn = document.getElementById('chatBtn');
+        const chatHistoryContainer = document.getElementById('chatHistory');
+        const apiKeyInput = document.getElementById('apiKey');
+        const apiProviderSelect = document.getElementById('apiProvider');
+        const astroApiKeyInput = document.getElementById('astroApiKey');
+
+        // Toggle Time Input
+        unknownTime.addEventListener('change', (e) => {
+            tobInput.disabled = e.target.checked;
+            if(e.target.checked) tobInput.value = "";
+        });
+
+        // Setup Marked.js options
+        marked.setOptions({
+            breaks: true,
+            gfm: true
+        });
+
+        // API Call Helper
+        async function callAPI(messages) {
+            const apiKey = apiKeyInput.value.trim();
+            const provider = apiProviderSelect.value;
+            
+            if (!apiKey) {
+                throw new Error(`Please enter your ${provider === 'groq' ? 'Groq' : 'Z.ai'} API Key in the top right corner.`);
+            }
+
+            let endpoint, headers, body, parseResponse;
+
+            if (provider === 'groq') {
+                endpoint = "https://api.groq.com/openai/v1/chat/completions";
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${apiKey}`
+                };
+                body = JSON.stringify({
+                    model: "llama3-70b-8192",
+                    messages: messages,
+                    max_tokens: 4096
+                });
+                parseResponse = (data) => data.choices[0].message.content;
+            } else if (provider === 'gemini') {
+                endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+                headers = {
+                    "Content-Type": "application/json"
+                };
+                const geminiContents = messages.map(msg => ({
+                    role: msg.role === 'assistant' ? 'model' : 'user',
+                    parts: [{ text: msg.content }]
+                }));
+                body = JSON.stringify({
+                    contents: geminiContents
+                });
+                parseResponse = (data) => data.candidates[0].content.parts[0].text;
+            } else {
+                endpoint = "https://api.z.ai/api/anthropic/v1/messages";
+                headers = {
+                    "Content-Type": "application/json",
+                    "x-api-key": apiKey,
+                    "anthropic-version": "2023-06-01",
+                    "anthropic-dangerous-direct-browser-access": "true"
+                };
+                body = JSON.stringify({
+                    model: "glm-4.5-flash",
+                    max_tokens: 4096,
+                    messages: messages
+                });
+                parseResponse = (data) => data.content[0].text;
+            }
+
+            const response = await fetch(endpoint, {
+                method: "POST",
+                headers: headers,
+                body: body
+            });
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.error?.message || `API Error: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            return parseResponse(data);
+        }
+
+        // Form Submit - Phase 1 to 2
+        birthForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!apiKeyInput.value.trim()) {
+                alert("Please enter your API Key first.");
+                apiKeyInput.focus();
+                return;
+            }
+
+            const dob = document.getElementById('dob').value;
+            const tob = unknownTime.checked ? "12:00" : tobInput.value;
+            const pob = document.getElementById('pob').value;
+
+            // Update UI
+            generateBtn.disabled = true;
+            phase1.classList.remove('active');
+            setTimeout(() => {
+                phase1.style.display = 'none';
+                loader.classList.add('active');
+            }, 600);
+
+            try {
+                // Fetch FreeAstroAPI Data if Key provided
+                let astroDataText = "";
+                let astroHtmlText = "";
+                const astroKey = astroApiKeyInput.value.trim();
+                
+                if (astroKey) {
+                    loader.innerHTML = "Calculating planetary positions...<br><span style='font-size: 0.9rem; font-family: Inter, sans-serif; color: var(--text-muted); display: block; margin-top: 0.5rem;'>Contacting FreeAstroAPI</span>";
+                    
+                    const [year, month, date] = dob.split('-').map(Number);
+                    const [hours, minutes] = tob.split(':').map(Number);
+                    
+                    const payload = {
+                        year: year,
+                        month: month,
+                        day: date,
+                        hour: hours,
+                        minute: minutes,
+                        city: pob
+                    };
+
+                    const astroRes = await fetch("https://api.freeastroapi.com/api/v1/vedic/calculate", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", "x-api-key": astroKey },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    // Respect the 1 req/sec rate limit of FreeAstroAPI
+                    loader.innerHTML = "Generating visual chart...<br><span style='font-size: 0.9rem; font-family: Inter, sans-serif; color: var(--text-muted); display: block; margin-top: 0.5rem;'>Contacting FreeAstroAPI</span>";
+                    await new Promise(r => setTimeout(r, 1100));
+
+                    const svgRes = await fetch("https://api.freeastroapi.com/api/v1/natal/chart/", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", "x-api-key": astroKey },
+                        body: JSON.stringify({
+                            ...payload,
+                            time_known: !unknownTime.checked,
+                            format: "svg",
+                            theme_type: "dark",
+                            chart_config: { 
+                                "chart_background": "transparent",
+                                "custom_planet_color": "#E7D3A5",
+                                "custom_sign_color": "#C9B27C",
+                                "custom_house_color": "#A7B8C9",
+                                "sign_line_color": "#D8C08A",
+                                "house_line_color": "#60758D"
+                            }
+                        })
+                    });
+                    
+                    if (!astroRes.ok) {
+                        const errTxt = await astroRes.text();
+                        throw new Error(`Failed to fetch astrology data from FreeAstroAPI: ${astroRes.status} ${errTxt}`);
+                    }
+                    const astroData = await astroRes.json();
+                    
+                    let svgMarkup = "";
+                    if (svgRes.ok) {
+                        svgMarkup = await svgRes.text();
+                    } else {
+                        const svgErr = await svgRes.text();
+                        console.error("SVG fetch failed", svgErr);
+                        svgMarkup = `<div style="padding: 1rem; color: #ef4444; border: 1px solid #ef4444; border-radius: 8px;">Failed to load visual chart: ${svgRes.status} - ${svgErr}</div>`;
+                    }
+                    
+                    // Format output
+                    astroDataText = "EXACT PLANETARY POSITIONS CALCULATED BY FREEASTROAPI:\n";
+                    astroHtmlText = "";
+                    
+                    if (svgMarkup) {
+                        astroHtmlText += `<style>#astroRawData svg { width: 100%; height: auto; max-width: 650px; display: block; margin: 0 auto; }</style>
+                        <div style="padding: 2rem; margin-bottom: 2rem; background: rgba(0,0,0,0.15); border-radius: 12px; border: 1px solid var(--border-glass); text-align: center;">
+                            ${svgMarkup}
+                        </div>`;
+                    }
+                    
+                    astroHtmlText += "<div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-top: 1.5rem;'>";
+
+                    if (astroData.ascendant) {
+                        astroDataText += `- Ascendant: ${astroData.ascendant.sign} (${astroData.ascendant.nakshatra?.name})\n`;
+                        astroHtmlText += `
+                            <div style="background: rgba(255,255,255,0.03); padding: 1.2rem; border-radius: 12px; border: 1px solid var(--border-glass);">
+                                <span style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Ascendant</span>
+                                <div style="color: var(--gold-primary); font-size: 1.3rem; font-weight: 600; margin-top: 0.3rem;">${astroData.ascendant.sign}</div>
+                                <div style="color: var(--text-main); font-size: 0.9rem; margin-top: 0.2rem;">${astroData.ascendant.nakshatra?.name || ''}</div>
+                            </div>
+                        `;
+                    }
+                    if (astroData.planets && Array.isArray(astroData.planets)) {
+                        astroData.planets.forEach(p => {
+                            astroDataText += `- ${p.name}: ${p.sign} (House ${p.house}), Nakshatra: ${p.nakshatra}. Retrograde: ${p.is_retrograde}\n`;
+                            astroHtmlText += `
+                                <div style="background: rgba(255,255,255,0.03); padding: 1.2rem; border-radius: 12px; border: 1px solid var(--border-glass);">
+                                    <span style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">${p.name} ${p.is_retrograde ? '<span style="color: #ef4444; font-weight: bold;">(Rx)</span>' : ''}</span>
+                                    <div style="color: var(--gold-primary); font-size: 1.3rem; font-weight: 600; margin-top: 0.3rem;">${p.sign} <span style="color: var(--text-muted); font-size: 1rem; font-weight: 400;">(H${p.house})</span></div>
+                                    <div style="color: var(--text-main); font-size: 0.9rem; margin-top: 0.2rem;">${p.nakshatra}</div>
+                                </div>
+                            `;
+                        });
+                    }
+                    astroHtmlText += "</div>";
+
+                    if (astroData.vimshottari_dasha && Array.isArray(astroData.vimshottari_dasha)) {
+                        astroDataText += "\nCURRENT DASHAS:\n";
+                        astroHtmlText += `<h3 style="margin-top: 2.5rem; margin-bottom: 1rem; font-size: 1.4rem;">Vimshottari Dasha Periods</h3><div style="display: flex; flex-direction: column; gap: 0.6rem;">`;
+                        
+                        const now = new Date();
+                        astroData.vimshottari_dasha.forEach(d => {
+                            const end = new Date(d.end);
+                            if (end > now && new Date(d.start) < new Date(now.getFullYear() + 20, 0)) { // just show relevant ones
+                                astroDataText += `- Mahadasha ${d.lord}: ${d.start} to ${d.end}\n`;
+                                const isCurrent = (new Date(d.start) <= now && end > now);
+                                astroHtmlText += `
+                                    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 1rem 1.2rem; border-radius: 8px; border-left: 3px solid ${isCurrent ? 'var(--gold-primary)' : 'var(--border-glass)'};">
+                                        <span style="font-weight: 600; color: ${isCurrent ? 'var(--gold-primary)' : 'var(--text-main)'};">Mahadasha ${d.lord} ${isCurrent ? '<span style="font-size:0.7rem; background:rgba(212,175,55,0.2); padding:2px 6px; border-radius:4px; margin-left:8px;">ACTIVE</span>' : ''}</span>
+                                        <span style="color: var(--text-muted); font-size: 0.95rem; font-family: monospace;">${d.start} &rarr; ${d.end}</span>
+                                    </div>
+                                `;
+                            }
+                        });
+                        astroHtmlText += "</div>";
+                    }
+                }
+
+                // Show Phase 2 immediately after AstroAPI
+                loader.classList.remove('active');
+                phase2.style.display = 'block';
+                setTimeout(() => {
+                    phase2.classList.add('active');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 50);
+
+                const rawDataEl = document.getElementById('astroRawData');
+                const aiLoader = document.getElementById('aiLoader');
+                const chartReading = document.getElementById('chartReading');
+                const chatContainer = document.getElementById('chatContainer');
+                
+                chartReading.style.display = 'none';
+                chatContainer.style.display = 'none';
+
+                if (astroDataText) {
+                    rawDataEl.style.display = 'block';
+                    rawDataEl.innerHTML = `<h2>Exact Positions</h2>${astroHtmlText}`;
+                } else {
+                    rawDataEl.style.display = 'none';
+                }
+
+                aiLoader.classList.add('active');
+
+                const birthDetailsContext = `Birth Details:\\nDate: ${dob}\\nTime: ${unknownTime.checked ? "Time unknown" : tobInput.value}\\nLocation: ${pob}`;
+
+                const systemPrompt = `You are an expert Vedic astrologer. I will provide my birth details and exact planetary positions (if available). 
+Please provide a structured reading including:
+1. Ascendant (Lagna), Sun, Moon, and Rising signs
+2. Key Planetary positions and houses
+3. Current Mahadasha and Antardasha overview (estimate if not provided)
+4. Key personality and life insights (strengths, challenges, karma)
+
+Output the reading beautifully formatted in Markdown with clear section headings. Adopt a wise, empathetic, and cosmic tone.`;
+
+                let initialMessage = `${systemPrompt}\\n\\nHere are my details:\\n${birthDetailsContext}`;
+                if (astroDataText) {
+                    initialMessage += `\\n\\n${astroDataText}\\n\\nPlease base your entire reading on these exact positions.`;
+                }
+
+                // Initialize conversation
+                conversationHistory = [
+                    { role: "user", content: initialMessage }
+                ];
+
+                const responseText = await callAPI(conversationHistory);
+                
+                // Add assistant response to history
+                conversationHistory.push({ role: "assistant", content: responseText });
+
+                // Render Chart Reading
+                aiLoader.classList.remove('active');
+                chartReading.style.display = 'block';
+                chartReading.innerHTML = marked.parse(responseText);
+                chatContainer.style.display = 'block';
+
+            } catch (error) {
+                alert("Error generating chart: " + error.message);
+                loader.classList.remove('active');
+                phase1.style.display = 'block';
+                setTimeout(() => phase1.classList.add('active'), 50);
+                generateBtn.disabled = false;
+            }
+        });
+
+        // Chat Submit - Phase 3
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const userText = chatInput.value.trim();
+            if (!userText) return;
+
+            // Add user message to UI
+            appendMessage('user', userText);
+            chatInput.value = '';
+            
+            // Disable input
+            chatInput.disabled = true;
+            chatBtn.disabled = true;
+
+            // Add user message to state
+            conversationHistory.push({ role: "user", content: userText });
+
+            try {
+                const responseText = await callAPI(conversationHistory);
+                
+                // Add AI message to state & UI
+                conversationHistory.push({ role: "assistant", content: responseText });
+                appendMessage('ai', responseText);
+
+            } catch (error) {
+                appendMessage('ai', `*Connection disturbed: ${error.message}*`);
+                conversationHistory.pop(); // Remove the failed user message from state so they can try again
+            } finally {
+                chatInput.disabled = false;
+                chatBtn.disabled = false;
+                chatInput.focus();
+            }
+        });
+
+        function appendMessage(sender, text) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `chat-msg ${sender}`;
+            
+            if (sender === 'ai') {
+                msgDiv.innerHTML = marked.parse(text);
+            } else {
+                msgDiv.textContent = text;
+            }
+            
+            chatHistoryContainer.appendChild(msgDiv);
+            chatHistoryContainer.scrollTop = chatHistoryContainer.scrollHeight;
+        }
+    </script>
+</body>
+</html>
